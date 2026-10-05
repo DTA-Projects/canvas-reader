@@ -81,6 +81,7 @@ class TestLoadConfig:
             "CANVAS_SESSION",
             "CONTENT_DIR",
             "TEXTBOOKS_DIR",
+            "STUDY_REPO",
         ):
             monkeypatch.delenv(var, raising=False)
 

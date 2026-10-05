@@ -30,6 +30,10 @@ content/courses/<id>-<slug>/
 `content/` is gitignored — it is private, per-device data. Never commit it, never
 paste its contents wholesale into issues, and never push PDFs to GitHub.
 
+When `STUDY_REPO` is set, each sync also pushes a Markdown-only copy into that
+private repo's `canvas/` subtree — read from `content/` locally; never publish
+more than Markdown yourself.
+
 ## How to answer course questions
 
 1. `canvas status` (or read `content/manifest.json`) to see what's available; if nothing

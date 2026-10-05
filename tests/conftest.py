@@ -2,12 +2,51 @@
 
 from __future__ import annotations
 
+import subprocess
+from pathlib import Path
+
 import pytest
 
 from canvas_reader.canvas import Canvas
 from canvas_reader.store import Config
 
 HOST = "https://school.instructure.com"
+
+
+def _git(*args: str, cwd: Path | None = None) -> None:
+    subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True, text=True)
+
+
+@pytest.fixture
+def study_remote(tmp_path) -> Path:
+    """A local bare git repo standing in for the private study-materials repo.
+
+    Seeded with a handwritten note so tests can prove tool publishing never
+    touches anything outside the managed canvas/ subtree. Fully offline.
+    """
+    bare = tmp_path / "study-remote.git"
+    _git("init", "-q", "-b", "main", "--bare", str(bare))
+    seed = tmp_path / "study-seed"
+    seed.mkdir()
+    _git("init", "-q", "-b", "main", str(seed))
+    _git("remote", "add", "origin", str(bare), cwd=seed)
+    note = seed / "Calculus" / "My Notes.md"
+    note.parent.mkdir(parents=True)
+    note.write_text("# Hand-written notes\n", encoding="utf-8")
+    _git("add", "-A", cwd=seed)
+    _git(
+        "-c",
+        "user.name=test",
+        "-c",
+        "user.email=test@example.com",
+        "commit",
+        "-q",
+        "-m",
+        "seed",
+        cwd=seed,
+    )
+    _git("push", "-q", "-u", "origin", "main", cwd=seed)
+    return bare
 
 
 @pytest.fixture

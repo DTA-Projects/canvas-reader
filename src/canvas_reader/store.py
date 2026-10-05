@@ -41,6 +41,7 @@ class Config:
     cookie: str | None  # full Cookie header value (Option B)
     content_dir: Path
     textbooks_dir: Path | None = None  # optional shared folder of course textbooks
+    study_repo: str | None = None  # optional private repo receiving Markdown copies
 
     @property
     def auth_mode(self) -> str:
@@ -75,6 +76,7 @@ def load_config() -> Config:
     session = os.environ.get("CANVAS_SESSION", "").strip()
     content = os.environ.get("CONTENT_DIR", "").strip() or "content"
     textbooks = os.environ.get("TEXTBOOKS_DIR", "").strip()
+    study_repo = os.environ.get("STUDY_REPO", "").strip()
 
     problems = []
     if not host:
@@ -99,6 +101,7 @@ def load_config() -> Config:
         cookie=cookie_header(session) if session else None,
         content_dir=Path(content).expanduser(),
         textbooks_dir=Path(textbooks).expanduser() if textbooks else None,
+        study_repo=study_repo or None,
     )
 
 
@@ -184,6 +187,9 @@ def write_env_file(path: Path, host: str, token: str | None, session: str | None
         "# Optional: shared folder of course textbooks (Windows: Z:\\Textbooks,",
         "# WSL: /mnt/z/Textbooks) — agents read PDFs from here",
         "# TEXTBOOKS_DIR=",
+        "",
+        "# Optional: private repo that receives each course's Markdown after sync",
+        "# STUDY_REPO=https://github.com/you/study-materials.git",
         "",
     ]
     write_text(path, "\n".join(lines))

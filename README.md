@@ -112,6 +112,7 @@ set, the token wins.
 |---|---|
 | `CONTENT_DIR` | Where synced content is written (default `./content`) |
 | `TEXTBOOKS_DIR` | A shared folder of course textbooks agents may read — e.g. `Z:\Textbooks` on Windows or `/mnt/z/Textbooks` under WSL. Shown by `canvas status` |
+| `STUDY_REPO` | Private repo that receives each course's Markdown under `canvas/` after every sync (see [Study materials](#study-materials-private-github-repo)) |
 
 ## Usage
 
@@ -148,6 +149,31 @@ content/                                # gitignored — stays on your device
 
 Every page and module link points at a local file first; things we can't archive
 (assignments, quizzes, external tools) keep their absolute Canvas URL.
+
+## Study materials (private GitHub repo)
+
+Set `STUDY_REPO` in `.env` to a private repo and every `canvas sync` ends with a
+push:
+
+```
+study-materials (private)             # cloned to content/.study-materials/
+├── Calculus/                         # ← your handwritten notes: never touched
+├── Low Level Programming/
+└── canvas/                           # ← tool-managed, replaced on each publish
+    └── 12345-intro-to-biology/
+        ├── README.md                 # syllabus
+        ├── modules.md                # reading order
+        └── pages/*.md                # course pages as Markdown
+```
+
+- **Markdown only** — PDFs and other files never leave the machine
+  (textbooks and course files are copyrighted; your notes are yours)
+- Only the `canvas/` folder is written — existing folders in the repo are
+  preserved exactly as they are
+- No changes → no empty commits; git failures print a `⚠ publish failed` line
+  but never fail the sync itself (your local content still succeeded)
+- Needs git credentials for the remote (e.g. `gh auth setup-git`); publishing is
+  skipped entirely when `STUDY_REPO` is unset
 
 ## Using with OpenCode
 

@@ -31,6 +31,7 @@ def env(monkeypatch, tmp_path):
     monkeypatch.setenv("CANVAS_SESSION", "session-cookie-value")
     monkeypatch.delenv("CANVAS_API_TOKEN", raising=False)
     monkeypatch.setenv("CONTENT_DIR", str(tmp_path / "content"))
+    monkeypatch.delenv("STUDY_REPO", raising=False)
     return tmp_path
 
 
@@ -128,6 +129,7 @@ class TestWhoami:
             "CANVAS_SESSION",
             "CONTENT_DIR",
             "TEXTBOOKS_DIR",
+            "STUDY_REPO",
         ):
             monkeypatch.delenv(var, raising=False)
         assert main(["whoami"]) == 3

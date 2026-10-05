@@ -16,6 +16,7 @@ import requests
 from . import __version__
 from .canvas import API, AuthExpired, Canvas, CanvasError, RateLimited
 from .convert import extract_pdf_text, html_to_markdown, rewrite_links
+from .publish import PublishError, publish_markdown
 from .store import (
     Config,
     ConfigError,
@@ -513,6 +514,13 @@ def cmd_sync(args: argparse.Namespace) -> int:
         for warning in result.get("warnings", []):
             print(f"⚠ {result['name']}: {warning}", file=sys.stderr)
     save_manifest(cfg.content_dir, manifest)
+    try:
+        published = publish_markdown(cfg)
+    except PublishError as exc:
+        print(f"⚠ publish failed: {exc}", file=sys.stderr)
+    else:
+        if published:
+            print(f"↑ study-materials: {published}", file=sys.stderr)
     if args.json:
         print(json.dumps(results, indent=2))
     elif results:
