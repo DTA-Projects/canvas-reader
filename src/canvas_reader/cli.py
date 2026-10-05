@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import getpass
 import json
+import re
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
@@ -221,6 +222,84 @@ def _item_line(
     return f"- [{title}]({target})"
 
 
+def _fetch_modules(client: Canvas, course_id: int) -> list[dict]:
+    """Module structure — available even when the Files/Pages tabs are hidden."""
+    modules = client.get_list(f"{API}/courses/{course_id}/modules?per_page=100")
+    for module in modules:
+        if "items" not in module:  # large modules omit inline items
+            module["items"] = client.get_list(
+                f"{API}/courses/{course_id}/modules/{module['id']}/items?per_page=100"
+            )
+    return modules
+
+
+def _fetch_pages(
+    client: Canvas, course_id: int, modules: list[dict], warnings: list[str]
+) -> list[dict]:
+    """Wiki pages; if the Pages tab is disabled, read them one-by-one via module items."""
+    try:
+        return client.get_list(f"{API}/courses/{course_id}/pages?include[]=body&per_page=100")
+    except (AuthExpired, RateLimited):
+        raise
+    except CanvasError as exc:
+        warnings.append(f"page listing denied ({exc}) — falling back to module items")
+
+    seen: set[str] = set()
+    pages: list[dict] = []
+    failed = 0
+    for module in modules:
+        for item in module.get("items") or []:
+            url = item.get("page_url") if item.get("type") == "Page" else None
+            if not url or url in seen:
+                continue
+            seen.add(url)
+            try:
+                pages.append(
+                    client.get_obj(f"{API}/courses/{course_id}/pages/{quote(url, safe='')}")
+                )
+            except CanvasError:
+                failed += 1
+    if failed:
+        warnings.append(f"{failed} module-linked pages are inaccessible")
+    return pages
+
+
+def _fetch_files(
+    client: Canvas,
+    course_id: int,
+    modules: list[dict],
+    extra_html: list[str | None],
+    warnings: list[str],
+) -> list[dict]:
+    """Course files; if the Files tab is disabled, follow module items and every
+    /files/<id> link found in the syllabus and page bodies."""
+    try:
+        return client.get_list(f"{API}/courses/{course_id}/files?per_page=100")
+    except (AuthExpired, RateLimited):
+        raise
+    except CanvasError as exc:
+        warnings.append(f"file listing denied ({exc}) — falling back to modules and links")
+
+    ids: set[int] = set()
+    for module in modules:
+        for item in module.get("items") or []:
+            if item.get("type") == "File" and item.get("content_id"):
+                ids.add(int(item["content_id"]))
+    for html in extra_html:
+        ids.update(int(x) for x in re.findall(r"/files/(\d+)", html or ""))
+
+    files: list[dict] = []
+    failed = 0
+    for file_id in sorted(ids):
+        try:
+            files.append(client.get_obj(f"{API}/files/{file_id}"))
+        except CanvasError:
+            failed += 1
+    if failed:
+        warnings.append(f"{failed} linked files are inaccessible")
+    return files
+
+
 def sync_course(
     client: Canvas,
     course: dict,
@@ -230,7 +309,11 @@ def sync_course(
     books_only: bool,
     force: bool,
 ) -> dict:
-    """Sync one course into content/courses/<id>-<slug>/ and update the manifest."""
+    """Sync one course into content/courses/<id>-<slug>/ and update the manifest.
+
+    Degrades per section: a denied Files/Pages listing falls back to module items
+    and link scraping instead of aborting the whole sync.
+    """
     course_id = course["id"]
     slug = f"{course_id}-{slugify(course['name'])}"
     course_dir = cfg.content_dir / "courses" / slug
@@ -238,8 +321,18 @@ def sync_course(
     entry.update({"name": course["name"], "slug": slug})
     file_entry = entry.setdefault("files", {})
     page_entry = entry.setdefault("pages", {})
+    warnings: list[str] = []
 
-    files = client.get_list(f"{API}/courses/{course_id}/files?per_page=100")
+    course_obj = client.get_obj(f"{API}/courses/{course_id}?include[]=syllabus_body")
+    modules = _fetch_modules(client, course_id)
+    pages = [] if books_only else _fetch_pages(client, course_id, modules, warnings)
+    files = _fetch_files(
+        client,
+        course_id,
+        modules,
+        extra_html=[course_obj.get("syllabus_body"), *(p.get("body") for p in pages)],
+        warnings=warnings,
+    )
     file_names = _download_files(
         client, files, course_dir, file_entry, force=force, pdfs_only=books_only
     )
@@ -251,9 +344,9 @@ def sync_course(
             "slug": slug,
             "pages": 0,
             "files": len(file_names),
+            "warnings": warnings,
         }
 
-    pages = client.get_list(f"{API}/courses/{course_id}/pages?include[]=body&per_page=100")
     page_names = _write_pages(
         client,
         pages,
@@ -264,14 +357,6 @@ def sync_course(
         file_targets=file_names,
         force=force,
     )
-
-    course_obj = client.get_obj(f"{API}/courses/{course_id}?include[]=syllabus_body")
-    modules = client.get_list(f"{API}/courses/{course_id}/modules?per_page=100")
-    for module in modules:
-        if "items" not in module:  # large modules omit inline items
-            module["items"] = client.get_list(
-                f"{API}/courses/{course_id}/modules/{module['id']}/items?per_page=100"
-            )
 
     page_targets = {f"/courses/{course_id}/pages/{u}": n for u, n in page_names.items()}
     file_targets = {fid: f"files/{n}" for fid, n in file_names.items()}
@@ -325,6 +410,7 @@ def sync_course(
         "slug": slug,
         "pages": len(page_names),
         "files": len(file_names),
+        "warnings": warnings,
     }
 
 
@@ -424,6 +510,8 @@ def cmd_sync(args: argparse.Namespace) -> int:
                 else f"{result['pages']} pages, {result['files']} files"
             )
             print(f"✔ {result['name']} — {verb}")
+        for warning in result.get("warnings", []):
+            print(f"⚠ {result['name']}: {warning}", file=sys.stderr)
     save_manifest(cfg.content_dir, manifest)
     if args.json:
         print(json.dumps(results, indent=2))

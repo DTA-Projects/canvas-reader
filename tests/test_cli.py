@@ -157,6 +157,7 @@ class TestSync:
                 "slug": "101-sample-course",
                 "pages": 2,
                 "files": 1,
+                "warnings": [],
             }
         ]
 
@@ -217,6 +218,106 @@ class TestSync:
         assert (course_dir / "files" / "sample-book.pdf").exists()
         assert not (course_dir / "pages").exists()
         assert not (course_dir / "README.md").exists()
+
+
+class TestRestrictedCourse:
+    """Schools can hide the Files/Pages nav tabs — sync must degrade, not die."""
+
+    @staticmethod
+    def _mock_restricted(rsps, tiny_pdf):
+        _add(rsps, f"{HOST}/api/v1/courses", json=[COURSE])
+        _add(
+            rsps,
+            f"{HOST}/api/v1/courses/101",
+            json={
+                **COURSE,
+                "syllabus_body": f'<p>Get the <a href="{HOST}/files/66/download">handout</a>.</p>',
+            },
+        )
+        _add(
+            rsps,
+            f"{HOST}/api/v1/courses/101/modules",
+            json=[
+                {
+                    "id": 7,
+                    "name": "Week 1",
+                    "items": [
+                        {"type": "Page", "title": "Week 1", "page_url": "week-1"},
+                        {"type": "File", "title": "Book", "content_id": 55},
+                    ],
+                }
+            ],
+        )
+        # listings denied, exactly as when the nav tabs are hidden …
+        _add(
+            rsps,
+            f"{HOST}/api/v1/courses/101/pages",
+            status=403,
+            json={"errors": [{"message": "That page has been disabled for this course"}]},
+        )
+        _add(
+            rsps,
+            f"{HOST}/api/v1/courses/101/files",
+            status=403,
+            json={"errors": [{"message": "user not authorized to perform that action"}]},
+        )
+        # … but single-object endpoints still work
+        _add(
+            rsps,
+            f"{HOST}/api/v1/courses/101/pages/week-1",
+            json={
+                "url": "week-1",
+                "title": "Week 1",
+                "updated_at": "2026-09-01T12:00:00Z",
+                "body": f'<p>Read <a href="{HOST}/files/55/download">the book</a>.</p>',
+            },
+        )
+        _add(
+            rsps,
+            f"{HOST}/api/v1/files/55",
+            json={
+                "id": 55,
+                "display_name": "Sample Book.pdf",
+                "size": len(tiny_pdf),
+                "url": f"{HOST}/files/55/download",
+            },
+        )
+        _add(
+            rsps,
+            f"{HOST}/api/v1/files/66",
+            json={
+                "id": 66,
+                "display_name": "Handout.docx",
+                "size": 9,
+                "url": f"{HOST}/files/66/download",
+            },
+        )
+        _add(rsps, f"{HOST}/files/55/download", body=tiny_pdf, content_type="application/pdf")
+        _add(
+            rsps,
+            f"{HOST}/files/66/download",
+            body=b"fake-docx",
+            content_type="application/octet-stream",
+        )
+
+    @responses.activate
+    def test_falls_back_and_still_syncs(self, env, tiny_pdf, capsys):
+        self._mock_restricted(responses, tiny_pdf)
+        assert main(["sync", "--json"]) == 0
+        captured = capsys.readouterr()
+
+        result = json.loads(captured.out)[0]
+        assert result["pages"] == 1
+        assert result["files"] == 2  # module-linked book + syllabus-scraped handout
+        assert len(result["warnings"]) >= 2  # both denials reported, not fatal
+        assert "⚠" in captured.err  # and surfaced to the human
+
+        course_dir = env / "content" / "courses" / "101-sample-course"
+        week1 = (course_dir / "pages" / "week-1.md").read_text(encoding="utf-8")
+        assert "(../files/sample-book.pdf)" in week1
+        assert (course_dir / "files" / "sample-book.pdf").exists()
+        assert (course_dir / "files" / "handout.docx").exists()
+        assert (course_dir / "README.md").exists()
 
 
 class TestStatus:
