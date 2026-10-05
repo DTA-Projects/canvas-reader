@@ -1,0 +1,10 @@
+# Normalize line endings: LF in the repo, on every platform.
+* text=auto eol=lf
+
+# Binary assets are never converted.
+*.pdf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary

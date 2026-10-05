@@ -1,0 +1,8 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "permissions": [
+    { "action": "read", "resource": "content/**", "effect": "allow" },
+    { "action": "shell", "resource": "canvas", "effect": "allow" },
+    { "action": "shell", "resource": "canvas *", "effect": "allow" }
+  ]
+}
