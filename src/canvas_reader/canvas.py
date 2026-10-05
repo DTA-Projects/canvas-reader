@@ -55,6 +55,8 @@ def _error_message(response: requests.Response) -> str:
         data = response.json()
     except ValueError:
         return (response.text or "").strip()[:300] or f"HTTP {response.status_code}"
+    if isinstance(data, dict) and isinstance(data.get("message"), str):
+        return data["message"]  # e.g. {"message": "domain not found"}
     errors = data.get("errors") if isinstance(data, dict) else None
     if isinstance(errors, list):
         parts = [str(e.get("message", e)) if isinstance(e, dict) else str(e) for e in errors]

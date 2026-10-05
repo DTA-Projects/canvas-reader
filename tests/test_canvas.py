@@ -162,6 +162,17 @@ class TestErrorMessages:
             client.get_obj(f"{API}/courses/1")
         assert excinfo.value.status == 404
 
+    @responses.activate
+    def test_bare_message_shape_is_extracted(self, client):
+        _add(
+            responses,
+            f"{HOST}/api/v1/courses/1",
+            status=404,
+            json={"message": "domain not found"},
+        )
+        with pytest.raises(CanvasError, match="domain not found"):
+            client.get_obj(f"{API}/courses/1")
+
 
 class TestDownload:
     @responses.activate
