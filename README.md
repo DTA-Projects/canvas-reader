@@ -206,6 +206,8 @@ instead of replacing it.
 |---|---|
 | `session cookie expired` (exit 2) | Re-copy the `_canvas_session` cookie, update `.env`, rerun |
 | `access token rejected` (exit 2) | Token was deleted or revoked — regenerate it |
+| `⚠ … listing denied` warnings | Your school hides the course's **Files** or **Pages** tab. Sync continues automatically via module items and links — the `⚠` lines say exactly what was recovered and what's unreachable |
+| `… [endpoint]` in an error | The error names the exact API path that failed — include it when reporting an issue |
 | `still holds a placeholder` (exit 3) | You copied `.env.example` without filling it in |
 | `Canvas is rate limiting us` (exit 1) | Canvas throttles by request cost — wait a few minutes; sync resumes where it stopped |
 | `download returned a login page` | Session expired mid-sync — refresh the cookie and rerun; partial files are never committed |
