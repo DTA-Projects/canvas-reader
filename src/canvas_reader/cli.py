@@ -10,6 +10,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from urllib.parse import quote
 
+import requests
+
 from . import __version__
 from .canvas import API, AuthExpired, Canvas, CanvasError, RateLimited
 from .convert import extract_pdf_text, html_to_markdown, rewrite_links
@@ -523,6 +525,10 @@ def main(argv: list[str] | None = None) -> int:
         return EXIT_ERROR
     except CliError as exc:
         print(f"✖ {exc}", file=sys.stderr)
+        return EXIT_ERROR
+    except requests.exceptions.RequestException as exc:
+        print(f"✖ cannot reach Canvas: {exc}", file=sys.stderr)
+        print("  → check CANVAS_HOST in .env, your network/VPN, then retry", file=sys.stderr)
         return EXIT_ERROR
     except KeyboardInterrupt:
         print("\n✖ interrupted", file=sys.stderr)

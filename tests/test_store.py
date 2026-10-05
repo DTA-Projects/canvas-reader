@@ -115,6 +115,17 @@ class TestLoadConfig:
         monkeypatch.setenv("CONTENT_DIR", str(tmp_path / "elsewhere"))
         assert load_config().content_dir == tmp_path / "elsewhere"
 
+    def test_dotenv_file_is_read_from_working_directory(self, monkeypatch, tmp_path):
+        """Regression: load_dotenv() alone walks from site-packages, not cwd."""
+        (tmp_path / ".env").write_text(
+            'CANVAS_HOST="https://real.instructure.com"\nCANVAS_SESSION="abc123"\n',
+            encoding="utf-8",
+        )
+        monkeypatch.chdir(tmp_path)
+        cfg = load_config()
+        assert cfg.host == "https://real.instructure.com"
+        assert cfg.cookie == "_canvas_session=abc123"
+
 
 class TestManifest:
     def test_roundtrip(self, tmp_path):

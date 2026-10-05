@@ -114,6 +114,12 @@ class TestWhoami:
         assert main(["whoami"]) == 2
         assert "cookie expired" in capsys.readouterr().err
 
+    @responses.activate
+    def test_unreachable_canvas_exits_1_not_traceback(self, env, capsys):
+        """No registrations → connection error must come back as a friendly message."""
+        assert main(["whoami"]) == 1
+        assert "cannot reach Canvas" in capsys.readouterr().err
+
     def test_missing_config_exits_3(self, monkeypatch, capsys, tmp_path):
         monkeypatch.chdir(tmp_path)
         for var in ("CANVAS_HOST", "CANVAS_API_TOKEN", "CANVAS_SESSION", "CONTENT_DIR"):

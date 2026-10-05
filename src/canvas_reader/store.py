@@ -14,7 +14,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 
-from dotenv import load_dotenv
+from dotenv import find_dotenv, load_dotenv
 
 MANIFEST_NAME = "manifest.json"
 
@@ -60,8 +60,14 @@ def cookie_header(value: str) -> str:
 
 
 def load_config() -> Config:
-    """Read credentials from the process environment, then from .env."""
-    load_dotenv()  # fills blanks from .env; never overrides real env vars
+    """Read credentials from the process environment, then from .env.
+
+    find_dotenv(usecwd=True) walks up from the working directory — plain
+    load_dotenv() walks from site-packages, which never finds your project.
+    """
+    env_file = find_dotenv(usecwd=True)
+    if env_file:
+        load_dotenv(env_file)
 
     host = os.environ.get("CANVAS_HOST", "").strip()
     token = os.environ.get("CANVAS_API_TOKEN", "").strip()
