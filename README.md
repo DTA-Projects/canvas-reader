@@ -157,19 +157,19 @@ push:
 
 ```
 study-materials (private)             # cloned to content/.study-materials/
-├── Calculus/                         # ← your handwritten notes: never touched
-├── Low Level Programming/
-└── canvas/                           # ← tool-managed, replaced on each publish
+└── canvas/
     └── 12345-intro-to-biology/
-        ├── README.md                 # syllabus
-        ├── modules.md                # reading order
-        └── pages/*.md                # course pages as Markdown
+        ├── README.md                 # syllabus — tool-published
+        ├── modules.md                # reading order — tool-published
+        ├── pages/*.md                # course pages — tool-published
+        └── Cheat Sheet.md            # anything you add here is preserved
 ```
 
 - **Markdown only** — PDFs and other files never leave the machine
   (textbooks and course files are copyrighted; your notes are yours)
-- Only the `canvas/` folder is written — existing folders in the repo are
-  preserved exactly as they are
+- The tool tracks exactly which files it published (`.study-materials.json` in
+  `content/`) and only ever replaces or removes *those* — notes you put in a
+  course folder survive every sync and ride along with the next push
 - No changes → no empty commits; git failures print a `⚠ publish failed` line
   but never fail the sync itself (your local content still succeeded)
 - Needs git credentials for the remote (e.g. `gh auth setup-git`); publishing is

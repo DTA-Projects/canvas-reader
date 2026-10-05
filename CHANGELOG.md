@@ -19,9 +19,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/); versioning: [SemVer](ht
   (e.g. `Z:\Textbooks`, `/mnt/z/Textbooks` under WSL); `canvas status` prints it and
   the skill/AGENTS.md tell agents to prefer those PDFs
 - **Auto-publish to a private study repo:** with `STUDY_REPO` set, every sync
-  copies each course's Markdown into the repo's tool-managed `canvas/` subtree,
-  commits, and pushes — handwritten notes elsewhere in the repo are never touched;
-  PDFs are never pushed; git failures warn without failing the sync
+  copies each course's Markdown into the repo's `canvas/<course>/` folders,
+  commits, and pushes — files the tool didn't publish (your handwritten notes in
+  those folders) are never touched, tracked via a published-file record; PDFs are
+  never pushed; git failures warn without failing the sync
 - `canvas whoami` / `canvas list` / `canvas status` with `--json` output and
   documented exit codes (0/1/2/3)
 - Network layer: Link-header pagination, rate-limit classification

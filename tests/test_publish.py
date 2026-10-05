@@ -12,7 +12,7 @@ import pytest
 import responses
 
 from canvas_reader.cli import main
-from canvas_reader.publish import PublishError, publish_markdown
+from canvas_reader.publish import CLONE_NAME, SUBTREE, PublishError, publish_markdown
 from canvas_reader.store import Config
 
 HOST = "https://school.instructure.com"
@@ -98,6 +98,21 @@ class TestPublish:
     def test_missing_content_raises_publish_error(self, tmp_path, study_remote):
         with pytest.raises(PublishError, match="nothing to publish"):
             publish_markdown(_cfg(tmp_path / "content", study_remote))
+
+    def test_user_files_inside_course_folder_survive(self, tmp_path, study_remote):
+        """Handwritten notes placed inside canvas/<course>/ are never touched."""
+        _make_content(tmp_path / "content")
+        cfg = _cfg(tmp_path / "content", study_remote)
+        publish_markdown(cfg)
+        note = tmp_path / "content" / CLONE_NAME / SUBTREE / "101-sample-course" / "My Notes.md"
+        note.write_text("hand-written\n", encoding="utf-8")
+
+        status = publish_markdown(cfg)
+        assert status == "pushed 1 classes"
+        assert note.read_text(encoding="utf-8") == "hand-written\n"
+        files = _remote_files(study_remote)
+        assert "canvas/101-sample-course/My Notes.md" in files  # rode along
+        assert "canvas/101-sample-course/pages/week-1.md" in files  # tool files intact
 
     def test_unreachable_remote_raises_publish_error(self, tmp_path):
         _make_content(tmp_path / "content")

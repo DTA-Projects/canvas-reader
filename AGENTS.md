@@ -31,8 +31,9 @@ content/courses/<id>-<slug>/
 paste its contents wholesale into issues, and never push PDFs to GitHub.
 
 When `STUDY_REPO` is set, each sync also pushes a Markdown-only copy into that
-private repo's `canvas/` subtree — read from `content/` locally; never publish
-more than Markdown yourself.
+private repo's `canvas/<course>/` folders — read from `content/` locally; never
+publish more than Markdown yourself. Files the tool did not publish (handwritten
+notes inside the course folders) are preserved on every publish.
 
 ## How to answer course questions
 
