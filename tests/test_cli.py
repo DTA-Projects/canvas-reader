@@ -60,7 +60,18 @@ MODULE = {
         {"type": "SubHeader", "title": "Getting started"},
         {"type": "Page", "title": "Week 1 notes", "page_url": "week-1"},
         {"type": "File", "title": "Textbook", "content_id": 55},
-        {"type": "Assignment", "title": "HW 1", "html_url": f"{HOST}/courses/101/assignments/7"},
+        {
+            "type": "Assignment",
+            "title": "HW 1",
+            "html_url": f"{HOST}/courses/101/assignments/7",
+            "content_details": {"due_at": "2026-10-05T17:00:00Z", "points_possible": 10},
+        },
+        {
+            "type": "Assignment",
+            "title": "No due date quiz",
+            "html_url": f"{HOST}/courses/101/assignments/8",
+            "content_details": {"due_at": None},
+        },
     ],
 }
 
@@ -186,6 +197,8 @@ class TestSync:
         assert "[Week 1 notes](pages/week-1.md)" in modules
         assert "[Textbook](files/sample-book.pdf)" in modules
         assert f"[HW 1]({HOST}/courses/101/assignments/7)" in modules  # external stays absolute
+        assert "due Oct 5, 2026" in modules  # content_details.due_at rendered
+        assert "No due date quiz" in modules and "No due date quiz —" not in modules
 
         pdf = course_dir / "files" / "sample-book.pdf"
         assert pdf.read_bytes().startswith(b"%PDF-")

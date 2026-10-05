@@ -195,6 +195,19 @@ def _write_pages(
     return names
 
 
+def _due_suffix(item: dict) -> str:
+    """' — due Oct 5, 2026 5:00 PM CDT' when Canvas provides a due date."""
+    due = ((item.get("content_details") or {}).get("due_at") or "").strip()
+    if not due:
+        return ""
+    try:
+        moment = datetime.fromisoformat(due.replace("Z", "+00:00")).astimezone()
+    except ValueError:
+        return ""
+    time_of_day = moment.strftime("%I:%M %p").lstrip("0")
+    return f" — due {moment:%b} {moment.day}, {moment.year} {time_of_day} {moment:%Z}".rstrip()
+
+
 def _item_line(
     item: dict,
     *,
@@ -218,18 +231,27 @@ def _item_line(
         target = f"files/{name}" if name else None
     if not target:
         target = item.get("html_url") or item.get("external_url") or ""
+    suffix = _due_suffix(item)
     if not target:
-        return f"- {title}"
-    return f"- [{title}]({target})"
+        return f"- {title}{suffix}"
+    return f"- [{title}]({target}){suffix}"
 
 
 def _fetch_modules(client: Canvas, course_id: int) -> list[dict]:
-    """Module structure — available even when the Files/Pages tabs are hidden."""
-    modules = client.get_list(f"{API}/courses/{course_id}/modules?per_page=100")
+    """Module structure with due dates — available even when Files/Pages are hidden.
+
+    include[]=items&content_details returns every item in one request; very
+    large modules omit inline items, so the per-module fallback asks for them
+    (with content_details too — that's where assignment/quiz due_at lives).
+    """
+    modules = client.get_list(
+        f"{API}/courses/{course_id}/modules?include[]=items&include[]=content_details&per_page=100"
+    )
     for module in modules:
-        if "items" not in module:  # large modules omit inline items
+        if "items" not in module:
             module["items"] = client.get_list(
-                f"{API}/courses/{course_id}/modules/{module['id']}/items?per_page=100"
+                f"{API}/courses/{course_id}/modules/{module['id']}/items"
+                "?include[]=content_details&per_page=100"
             )
     return modules
 

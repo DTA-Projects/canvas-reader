@@ -18,6 +18,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/); versioning: [SemVer](ht
 - **`TEXTBOOKS_DIR` setting:** point `.env` at a shared textbook folder
   (e.g. `Z:\Textbooks`, `/mnt/z/Textbooks` under WSL); `canvas status` prints it and
   the skill/AGENTS.md tell agents to prefer those PDFs
+- **Module due dates:** `include[]=items&content_details` on the modules fetch, so
+  `modules.md` renders each assignment/quiz item's `due_at` as
+  `— due Oct 5, 2026 5:00 PM CDT` (local timezone); one index request replaces the
+  old per-module item fetches
 - **Auto-publish to a private study repo:** with `STUDY_REPO` set, every sync
   copies each course's Markdown into the repo's `canvas/<course>/` folders,
   commits, and pushes — files the tool didn't publish (your handwritten notes in

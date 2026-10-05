@@ -39,7 +39,8 @@ notes inside the course folders) are preserved on every publish.
 
 1. `canvas status` (or read `content/manifest.json`) to see what's available; if nothing
    is synced or the question is time-sensitive, run `canvas sync` first.
-2. Glob/grep inside `content/courses/*/pages/` before reading whole files.
+2. Glob/grep inside `content/courses/*/pages/` before reading whole files; for due
+   dates grep `modules.md` first — items render as `— due Oct 5, 2026 5:00 PM CDT`.
 3. For textbooks, check `canvas status` — a `Textbooks: <folder>` line means a
    shared textbook folder is configured (here: `Z:\Textbooks`, i.e.
    `/mnt/z/Textbooks` under WSL); prefer those PDFs, and fall back to

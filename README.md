@@ -137,7 +137,7 @@ content/                                # gitignored — stays on your device
 └── courses/
     └── 12345-intro-to-biology/
         ├── README.md                   # identity, syllabus, table of contents
-        ├── modules.md                  # module structure, links made local
+        ├── modules.md                  # module structure + due dates, links local
         ├── pages/
         │   ├── week-1-notes.md         # Canvas pages → Markdown + local images/links
         │   └── lab-safety.md
