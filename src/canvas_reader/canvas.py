@@ -49,6 +49,12 @@ def next_link(header: str) -> str | None:
     return None
 
 
+def _endpoint(url: str, host: str) -> str:
+    """Short, credential-free label for an error message: path + query, no host."""
+    path = url.removeprefix(host) or url
+    return path.split("#")[0]
+
+
 def _error_message(response: requests.Response) -> str:
     """Extract Canvas's {"errors": [{"message": ...}]} shape, falling back to text."""
     try:
@@ -134,7 +140,10 @@ class Canvas:
                 attempt += 1
                 continue
             if not response.ok:
-                raise CanvasError(_error_message(response), response.status_code)
+                raise CanvasError(
+                    f"{_error_message(response)}  [{_endpoint(url, self.cfg.host)}]",
+                    response.status_code,
+                )
             if "text/html" in response.headers.get("Content-Type", ""):
                 raise self._auth_error("got a login page instead of JSON")
             self._respect_quota(response)
@@ -203,8 +212,10 @@ class Canvas:
                         "and rerun (sync resumes)"
                     )
                 if not response.ok:
+                    label = _endpoint(url, self.cfg.host).split("?")[0]
                     raise CanvasError(
-                        f"download failed: HTTP {response.status_code}", response.status_code
+                        f"download failed: HTTP {response.status_code}  [{label}]",
+                        response.status_code,
                     )
                 if "text/html" in response.headers.get("Content-Type", ""):
                     raise self._auth_error("download returned a login page")

@@ -412,6 +412,7 @@ def cmd_sync(args: argparse.Namespace) -> int:
     manifest = load_manifest(cfg.content_dir)
     results = []
     for course in courses:
+        print(f"→ syncing: {course['name']}", file=sys.stderr)
         result = sync_course(
             client, course, cfg, manifest, books_only=args.books_only, force=args.force
         )

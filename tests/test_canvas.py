@@ -161,6 +161,7 @@ class TestErrorMessages:
         with pytest.raises(CanvasError, match="not found") as excinfo:
             client.get_obj(f"{API}/courses/1")
         assert excinfo.value.status == 404
+        assert f"[{API}/courses/1]" in str(excinfo.value)  # failing endpoint is named
 
     @responses.activate
     def test_bare_message_shape_is_extracted(self, client):
