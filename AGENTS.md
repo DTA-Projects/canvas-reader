@@ -35,8 +35,12 @@ paste its contents wholesale into issues, and never push PDFs to GitHub.
 1. `canvas status` (or read `content/manifest.json`) to see what's available; if nothing
    is synced or the question is time-sensitive, run `canvas sync` first.
 2. Glob/grep inside `content/courses/*/pages/` before reading whole files.
-3. For textbooks, grep the `.txt` sidecar to find the page, then `read` the `.pdf`
-   (the read tool passes PDFs to the model directly) for diagrams.
+3. For textbooks, check `canvas status` — a `Textbooks: <folder>` line means a
+   shared textbook folder is configured (here: `Z:\Textbooks`, i.e.
+   `/mnt/z/Textbooks` under WSL); prefer those PDFs, and fall back to
+   `content/courses/*/files/` + their `.txt` sidecars. Grep the sidecar to find
+   the page, then `read` the `.pdf` (the read tool passes PDFs to the model
+   directly) for diagrams.
 4. Links that point outside the course folder are absolute Canvas URLs — they mean
    "this lives only on Canvas" (assignments, quizzes); say so instead of inventing content.
 

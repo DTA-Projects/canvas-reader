@@ -26,7 +26,10 @@ content/
 1. List `content/courses/*/README.md` to see which courses exist.
 2. Grep before reading: `pages/` for lecture notes, `*.txt` sidecars for textbook
    passages. Read whole files only after grep narrows the location.
-3. PDF textbooks: grep the `.txt` sidecar to find the section, then `read` the
+3. PDF textbooks: check `canvas status` for a `Textbooks: <folder>` line first —
+   that shared folder holds the school-issued textbooks (here `Z:\Textbooks`,
+   mounted at `/mnt/z/Textbooks` under WSL). Otherwise grep the `.txt` sidecar
+   under `content/courses/*/files/` to find the section, then `read` the
    matching `.pdf` — the read tool passes PDFs (≤20 MiB) to the model directly.
    `grep` cannot search inside PDFs; that is why the sidecars exist.
 4. If the question is about *today* (due dates, new announcements) or `content/`

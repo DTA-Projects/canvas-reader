@@ -15,6 +15,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/); versioning: [SemVer](ht
   or Pages navigation tab (403 on the listings), sync falls back to module items,
   single-object fetches, and `/files/<id>` links scraped from syllabi and pages —
   reported as `⚠` warnings instead of aborting
+- **`TEXTBOOKS_DIR` setting:** point `.env` at a shared textbook folder
+  (e.g. `Z:\Textbooks`, `/mnt/z/Textbooks` under WSL); `canvas status` prints it and
+  the skill/AGENTS.md tell agents to prefer those PDFs
 - `canvas whoami` / `canvas list` / `canvas status` with `--json` output and
   documented exit codes (0/1/2/3)
 - Network layer: Link-header pagination, rate-limit classification

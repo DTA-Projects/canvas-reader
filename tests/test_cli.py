@@ -122,7 +122,13 @@ class TestWhoami:
 
     def test_missing_config_exits_3(self, monkeypatch, capsys, tmp_path):
         monkeypatch.chdir(tmp_path)
-        for var in ("CANVAS_HOST", "CANVAS_API_TOKEN", "CANVAS_SESSION", "CONTENT_DIR"):
+        for var in (
+            "CANVAS_HOST",
+            "CANVAS_API_TOKEN",
+            "CANVAS_SESSION",
+            "CONTENT_DIR",
+            "TEXTBOOKS_DIR",
+        ):
             monkeypatch.delenv(var, raising=False)
         assert main(["whoami"]) == 3
         assert "CANVAS_HOST" in capsys.readouterr().err

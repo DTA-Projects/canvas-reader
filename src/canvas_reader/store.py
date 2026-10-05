@@ -40,6 +40,7 @@ class Config:
     token: str | None  # API token (Option A)
     cookie: str | None  # full Cookie header value (Option B)
     content_dir: Path
+    textbooks_dir: Path | None = None  # optional shared folder of course textbooks
 
     @property
     def auth_mode(self) -> str:
@@ -73,6 +74,7 @@ def load_config() -> Config:
     token = os.environ.get("CANVAS_API_TOKEN", "").strip()
     session = os.environ.get("CANVAS_SESSION", "").strip()
     content = os.environ.get("CONTENT_DIR", "").strip() or "content"
+    textbooks = os.environ.get("TEXTBOOKS_DIR", "").strip()
 
     problems = []
     if not host:
@@ -96,6 +98,7 @@ def load_config() -> Config:
         token=token or None,
         cookie=cookie_header(session) if session else None,
         content_dir=Path(content).expanduser(),
+        textbooks_dir=Path(textbooks).expanduser() if textbooks else None,
     )
 
 
@@ -177,6 +180,10 @@ def write_env_file(path: Path, host: str, token: str | None, session: str | None
         "",
         "# Optional: where synced content is written (default: ./content)",
         "# CONTENT_DIR=content",
+        "",
+        "# Optional: shared folder of course textbooks (Windows: Z:\\Textbooks,",
+        "# WSL: /mnt/z/Textbooks) — agents read PDFs from here",
+        "# TEXTBOOKS_DIR=",
         "",
     ]
     write_text(path, "\n".join(lines))

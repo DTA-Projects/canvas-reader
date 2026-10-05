@@ -106,6 +106,13 @@ Re-copy the cookie and re-run — sync is incremental, so you only lose the wait
 **Precedence:** real environment variables beat `.env`; if both a token and a session are
 set, the token wins.
 
+**Optional `.env` settings:**
+
+| Variable | Meaning |
+|---|---|
+| `CONTENT_DIR` | Where synced content is written (default `./content`) |
+| `TEXTBOOKS_DIR` | A shared folder of course textbooks agents may read — e.g. `Z:\Textbooks` on Windows or `/mnt/z/Textbooks` under WSL. Shown by `canvas status` |
+
 ## Usage
 
 | Command | What it does |
@@ -116,7 +123,7 @@ set, the token wins.
 | `canvas sync` | Sync all courses; pass a name/code/id to sync one |
 | `canvas sync --books-only` | Only download PDF textbooks |
 | `canvas sync --force` | Re-download even if nothing changed |
-| `canvas status` | What's synced, page/PDF counts, last sync time (`--json`) |
+| `canvas status` | What's synced, page/PDF counts, last sync time (`--json`); also prints the `Textbooks:` folder if configured |
 
 **Exit codes** (for scripting and agent use): `0` success · `1` error/rate-limited ·
 `2` auth expired · `3` configuration problem.

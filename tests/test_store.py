@@ -75,7 +75,13 @@ class TestLoadConfig:
     @pytest.fixture(autouse=True)
     def clean_env(self, monkeypatch, tmp_path):
         monkeypatch.chdir(tmp_path)  # no stray .env
-        for var in ("CANVAS_HOST", "CANVAS_API_TOKEN", "CANVAS_SESSION", "CONTENT_DIR"):
+        for var in (
+            "CANVAS_HOST",
+            "CANVAS_API_TOKEN",
+            "CANVAS_SESSION",
+            "CONTENT_DIR",
+            "TEXTBOOKS_DIR",
+        ):
             monkeypatch.delenv(var, raising=False)
 
     def test_missing_everything(self):
@@ -114,6 +120,13 @@ class TestLoadConfig:
         monkeypatch.setenv("CANVAS_SESSION", "abc")
         monkeypatch.setenv("CONTENT_DIR", str(tmp_path / "elsewhere"))
         assert load_config().content_dir == tmp_path / "elsewhere"
+
+    def test_textbooks_dir_is_optional(self, monkeypatch, tmp_path):
+        monkeypatch.setenv("CANVAS_HOST", "https://s.instructure.com")
+        monkeypatch.setenv("CANVAS_SESSION", "abc")
+        assert load_config().textbooks_dir is None
+        monkeypatch.setenv("TEXTBOOKS_DIR", str(tmp_path / "Textbooks"))
+        assert load_config().textbooks_dir == tmp_path / "Textbooks"
 
     def test_dotenv_file_is_read_from_working_directory(self, monkeypatch, tmp_path):
         """Regression: load_dotenv() alone walks from site-packages, not cwd."""

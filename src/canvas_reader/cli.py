@@ -554,6 +554,8 @@ def cmd_status(args: argparse.Namespace) -> int:
             when = (row["synced_at"] or "never").replace("T", " ")
             counts = f"{row['pages']:>3} pages  {row['pdfs']:>3} pdfs"
             print(f"{row['id']:>8}  {counts}  {when}  {row['name']}")
+    if not args.json and cfg.textbooks_dir:
+        print(f"Textbooks: {cfg.textbooks_dir}")
     return EXIT_OK
 
 
