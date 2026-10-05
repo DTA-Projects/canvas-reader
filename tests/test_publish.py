@@ -114,6 +114,17 @@ class TestPublish:
         assert "canvas/101-sample-course/My Notes.md" in files  # rode along
         assert "canvas/101-sample-course/pages/week-1.md" in files  # tool files intact
 
+    def test_files_anywhere_in_clone_are_pushed(self, tmp_path, study_remote):
+        """Anything dropped into the clone — even at its root — reaches GitHub."""
+        _make_content(tmp_path / "content")
+        cfg = _cfg(tmp_path / "content", study_remote)
+        publish_markdown(cfg)
+        root_file = tmp_path / "content" / CLONE_NAME / "Cross Course Overview.md"
+        root_file.write_text("# Overview\n", encoding="utf-8")
+
+        assert publish_markdown(cfg) == "pushed 1 classes"
+        assert "Cross Course Overview.md" in _remote_files(study_remote)
+
     def test_unreachable_remote_raises_publish_error(self, tmp_path):
         _make_content(tmp_path / "content")
         bad = tmp_path / "no-such-remote.git"

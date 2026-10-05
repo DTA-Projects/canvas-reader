@@ -146,7 +146,7 @@ def publish_markdown(cfg: Config) -> str | None:
         json.dumps(sorted(published), indent=1) + "\n",
     )
 
-    _git(clone, "add", "-A", "--", SUBTREE)
+    _git(clone, "add", "-A")  # everything in the clone goes: notes, root files, course folders
     if _git(clone, "diff", "--cached", "--quiet", check=False).returncode == 0:
         return f"already up to date ({count} classes)"
     message = f"canvas sync · {count} classes · {date.today().isoformat()}"
